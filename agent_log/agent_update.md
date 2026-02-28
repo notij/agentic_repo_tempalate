@@ -20,7 +20,7 @@
 3. 通过 `git diff` 识别“实际发生了什么变化”（模块职责变化、文件新增删除、流程变化）。
 4. 比较“当前真实状态”与 `agent_log/agent_read.md` 的差异。
 5. 更新 `agent_log/agent_read.md`，保证其反映最新状态。
-6. 在每次 commit 前，基于 `git diff` 将本次变更写入 `agent_log/worklog/YYYY/MM.md`，按日期追加记录。
+6. 在当前 branch 的每次 commit 前，先记录“当前本地最新 commit（用于回溯）”，再基于 `git diff` 将本次将要提交的更新内容写入 `agent_log/worklog/YYYY/MM.md`，按日期追加记录。
 7. 结束。无需输出阶段总结模板，无需写进度汇报。
 
 ## 更新 `agent_log/agent_read.md` 的规则
@@ -81,13 +81,14 @@
 - `memory/*` 只写“历史存档，默认低优先级”，避免展开细节。
 - 首次创建完成后，再按常规规则进行增量更新。
 
-## 更新 `agent_log/worklog/YYYY/MM.md` 的规则（每次 commit 前执行）
+## 更新 `agent_log/worklog/YYYY/MM.md` 的规则（当前 branch 每次 commit 前执行）
 
 - 目录结构固定为：`agent_log/worklog/YYYY/MM.md`（例如 `agent_log/worklog/2026/02.md`）。
 - 若当月文件不存在，先创建并写入月标题。
 - 每次记录按“日期”分段追加，不覆盖历史内容。
 - 若当日日期标题已存在（如 `## YYYY-MM-DD`），禁止再新增同日期标题；只在该日期段落下继续追加本次记录。
-- 内容基于 `git diff`，只记录本次实际改动，不写空泛描述。
+- 必须记录“当前本地最新 commit（hash）”与当前 branch 名，便于后续 `git checkout` 回溯。
+- 内容基于本次提交前的 `git diff`，只记录本次实际改动，不写空泛描述。
 - 建议简洁格式：
   - 改动概
   - 变更文件列表
@@ -99,6 +100,8 @@
 ```text
 ## YYYY-MM-DD
 
+- branch: <branch_name>
+- latest_local_commit: <latest_local_commit_sha_before_this_commit>
 - 改动概述：...
 - 变更文件：
   - `path/a`
@@ -111,6 +114,7 @@
 
 ```text
 - 本次 commit 前更新：
+  - latest_local_commit: <latest_local_commit_sha_before_this_commit>
   - 改动概述：...
   - 变更文件：...
   - 关键行为变化：...
@@ -121,7 +125,7 @@
 - 不要把阶段进度、执行过程、临时排查结论写入 `agent_log/agent_read.md`。
 - 不要追加“本轮完成了什么”的流水账内容。
 - 不要为凑字数重复已有模块描述。
-- 不要跳过 worklog 更新后直接 commit（除非本次无代码改动且用户明确允许）。
+- 不要在当前 branch 执行 commit 前漏记 worklog（除非本次无代码改动且用户明确允许）。
 - 不要在未获用户明确授权时修改 `agent_log/agent_read.md` 顶部固定规则或本文件规则条款。
 
 ## 质量检查清单（提交前自检）
@@ -131,6 +135,6 @@
 - 模块职责是否反映了当前代码行为，而不是旧行为？
 - 是否避免把 `memory/*` 写成必须深入阅读的模块？
 - 文档是否保持精简，可被下一位 Agent 快速读完,并且理解整个架构？
-- 本次 commit 前是否已把 `git diff` 摘要追加到当月 worklog？
+- 当前 branch 本次 commit 前，是否已记录 latest_local_commit 并把本次 diff 摘要追加到当月 worklog？
 - 当天已有日期标题时，是否避免重复新增同日期标题？
 
